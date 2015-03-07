@@ -1,6 +1,8 @@
+import scala.util.parsing.combinator._
+
 object BF extends App {
-  val raw = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.".toCharArray()
-  val program = raw.map(Parser.charToCommand)
+  val raw = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+  val program = BFParser.parseAll(BFParser.program, raw).get.toArray
   val vm = new VM(program)
   vm.run
 }
@@ -13,20 +15,21 @@ case object Write extends Command
 case object LoopIn extends Command
 case object LoopOut extends Command
 
-object Parser {
-  def charToCommand(c: Char): Command = c match {
-    case '<' => Move(-1)
-    case '>' => Move(1)
-    case '+' => Add(1)
-    case '-' => Add(-1)
-    case ',' => Read
-    case '.' => Write
-    case '[' => LoopIn
-    case ']' => LoopOut
-  }
+object BFParser extends JavaTokenParsers {
+  def add     = "+" ^^ { s => Add(1) }
+  def dec     = "-" ^^ { s => Add(-1) }
+  def left    = "<" ^^ { s => Move(-1) }
+  def right   = ">" ^^ { s => Move(1) }
+  def read    = "," ^^ { s => Read }
+  def write   = "." ^^ { s => Write }
+  def loopin  = "[" ^^ { s => LoopIn }
+  def loopout = "]" ^^ { s => LoopOut }
+
+  def operator = (add | dec | left | right | read | write | loopin | loopout)
+  def program = operator *
 }
 
-class VM(program: Array[Command]) {
+class VM(program: Array[_ <: Command]) {
   var mem: Array[Integer] = Array.fill[Integer](100)(0)
   var mp = 0
   var pc = 0
