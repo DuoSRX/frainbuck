@@ -3,7 +3,7 @@ import scala.util.parsing.combinator.RegexParsers
 object BF extends App {
   val raw = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
   val program = BFParser.parseAll(BFParser.program, raw).get
-  // println(program)
+  println(program)
   val vm = new VM(program)
   vm.run
 }
@@ -16,16 +16,13 @@ case class Write() extends Command
 case class Loop(commands: List[Command]) extends Command
 
 object BFParser extends RegexParsers {
-  def ignore = """[^<>+-\.,\[\]]""".r
-  def add     = "+" ^^ { s => Add(1) }
-  def dec     = "-" ^^ { s => Add(-1) }
-  def left    = "<" ^^ { s => Move(-1) }
-  def right   = ">" ^^ { s => Move(1) }
+  def add   = """\++""".r ^^ { s => Add(s.length) }
+  def dec   = """-+""".r  ^^ { s => Add(-s.length) }
+  def left  = """<+""".r  ^^ { s => Move(-s.length) }
+  def right = """>+""".r  ^^ { s => Move(s.length) }
   def read    = "," ^^ { s => Read() }
   def write   = "." ^^ { s => Write() }
-
-  def operator = (add | dec | left | right | read | write)
-
+  def operator = add | dec | left | right | read | write
   def loop    = "[" ~> (operator *) <~ "]" ^^ { l => Loop(l) }
   def program = (operator | loop) *
 }
