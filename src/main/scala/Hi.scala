@@ -6,10 +6,8 @@ object BF extends App {
 }
 
 sealed abstract class Command
-case object Left extends Command
-case object Right extends Command
-case object Add extends Command
-case object Sub extends Command
+case class Move(n: Int) extends Command
+case class Add(n: Int) extends Command
 case object Read extends Command
 case object Write extends Command
 case object LoopIn extends Command
@@ -17,10 +15,10 @@ case object LoopOut extends Command
 
 object Parser {
   def charToCommand(c: Char): Command = c match {
-    case '<' => Left
-    case '>' => Right
-    case '+' => Add
-    case '-' => Sub
+    case '<' => Move(-1)
+    case '>' => Move(1)
+    case '+' => Add(1)
+    case '-' => Add(-1)
     case ',' => Read
     case '.' => Write
     case '[' => LoopIn
@@ -39,11 +37,11 @@ class VM(program: Array[Command]) {
     def go(current: Int, loop: Int): Int = {
       if (loop <= 0) current
       else {
-        next = current + direction
+        val next = current + direction
         program(current + direction) match {
           case LoopIn  => go(next, loop + direction)
           case LoopOut => go(next, loop - direction)
-          case _       => go(next, loop)
+          case _         => go(next, loop)
         }
       }
     }
@@ -51,12 +49,10 @@ class VM(program: Array[Command]) {
     go(pc + direction, 1)
   }
 
-  def step(command: Command) {
+  def step(command: Command) = {
     command match {
-      case Add     => mem(mp) += 1
-      case Sub     => mem(mp) -= 1
-      case Left    => mp -= 1
-      case Right   => mp += 1
+      case Add(n)  => mem(mp) += n
+      case Move(n) => mp += n
       case Write   => print(mem(mp).toChar)
       case Read    => mem(mp) = readInt()
       case LoopIn  => if (mem(mp) == 0) pc = findLoop(1)
