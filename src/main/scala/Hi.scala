@@ -31,7 +31,7 @@ class VM(program: List[Command]) {
   var mem: Array[Integer] = Array.fill[Integer](100)(0)
   var mp = 0
 
-  def run: Unit = run(program)
+  def run: Unit = run(optimize(program))
 
   private def run(commands: List[Command]): Unit = {
     commands.map(step)
@@ -43,5 +43,12 @@ class VM(program: List[Command]) {
     case Write() => print(mem(mp).toChar)
     case Read()  => mem(mp) = readInt()
     case Loop(l) => do { run(l) } while (mem(mp) != 0)
+  }
+
+  private def optimize(program: List[Command]): List[Command] = program match {
+    case Add(x)::Add(y)::xs   => optimize(Add(x+y)::xs)
+    case Move(x)::Move(y)::xs => optimize(Move(x+y)::xs)
+    case Nil => Nil
+    case x::xs => x::optimize(xs)
   }
 }
