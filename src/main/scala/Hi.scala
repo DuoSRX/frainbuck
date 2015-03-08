@@ -1,9 +1,9 @@
 import scala.util.parsing.combinator.RegexParsers
 
 object BF extends App {
-  val raw = "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+  val raw = "+foobar+++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
   val program = BFParser.parseAll(BFParser.program, raw).get
-  println(program)
+
   val vm = new VM(program)
   vm.run
 }
@@ -16,12 +16,16 @@ case class Write() extends Command
 case class Loop(commands: List[Command]) extends Command
 
 object BFParser extends RegexParsers {
-  def add   = """\++""".r ^^ { s => Add(s.length) }
-  def dec   = """-+""".r  ^^ { s => Add(-s.length) }
-  def left  = """<+""".r  ^^ { s => Move(-s.length) }
-  def right = """>+""".r  ^^ { s => Move(s.length) }
+  // Ignore everything that's not valid Brainfuck
+  override protected val whiteSpace = """[^+-<>,.\[\]]+""".r
+
+  def add     = """\++""".r ^^ { s => Add(s.length) }
+  def dec     = """-+""".r  ^^ { s => Add(-s.length) }
+  def left    = """<+""".r  ^^ { s => Move(-s.length) }
+  def right   = """>+""".r  ^^ { s => Move(s.length) }
   def read    = "," ^^ { s => Read() }
   def write   = "." ^^ { s => Write() }
+
   def operator = add | dec | left | right | read | write
   def loop    = "[" ~> (operator *) <~ "]" ^^ { l => Loop(l) }
   def program = (operator | loop) *
