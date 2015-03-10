@@ -1,7 +1,13 @@
 import scala.util.parsing.combinator.RegexParsers
 
-object BF extends App {
+object Frainbuck extends App {
   val raw = "+foobar+++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>."
+  // println(args)
+  // val source = scala.io.Source.fromFile(args(0))
+  // val lines = source.getLines.mkString("\n")
+  // source.close()
+
+  // val program = BFParser.parseAll(BFParser.program, lines).get
   val program = BFParser.parseAll(BFParser.program, raw).get
 
   val vm = new VM(program)
